@@ -9,7 +9,7 @@ RESET='\033[0m'
 
 # Vars
 BIN_DIR="$HOME/.local/bin"
-SHORTCUTS="dr da di drm dun df dl dc dcl di-help"
+SHORTCUTS="dr dt da di drm dun df dl dc dcl di-help"
 
 # Detect shell profile
 SHELL_NAME=$(basename "$SHELL")

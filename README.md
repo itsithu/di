@@ -1,12 +1,13 @@
 # di
 
-A tiny CLI wrapper providing concise aliases for common Deno commands — inspired by [@antfu/ni](https://github.com/antfu/ni).
+A tiny CLI wrapper providing concise aliases for common Deno commands - inspired by [@antfu/ni](https://github.com/antfu/ni).
 
 ## Features
 
 | Alias     | Runs             |
 | --------- | ---------------- |
 | `dr`      | `deno run`       |
+| `dt`      | `deno task`      |
 | `da`      | `deno add`       |
 | `di`      | `deno install`   |
 | `drm`     | `deno remove`    |

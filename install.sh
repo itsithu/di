@@ -9,8 +9,8 @@ RESET='\033[0m'
 
 # Vars
 BIN_DIR="$HOME/.local/bin"
-SHORTCUTS="dr da di drm dun df dl dc dcl"
-COMMANDS="run add install remove uninstall fmt lint cache clean"
+SHORTCUTS="dr dt da di drm dun df dl dc dcl"
+COMMANDS="run task add install remove uninstall fmt lint cache clean"
 REPO_URL="https://github.com/itsithu/di"
 ISSUES_URL="https://github.com/itsithu/di/issues"
 X_URL="https://x.com/itsithu"
@@ -47,6 +47,7 @@ di — Tiny CLI wrapper for Deno commands
 ---------------------------------------
 Shortcuts:
   dr    → deno run
+  dt    → deno task
   da    → deno add
   di    → deno install
   drm   → deno remove
