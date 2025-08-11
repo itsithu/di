@@ -1,41 +1,60 @@
 #!/bin/sh
 set -e
 
+# CONFIG 
 BIN_DIR="$HOME/.local/bin"
-SHORTCUTS="dr da di drm dun df dl dc dcl"
+SHORTCUTS="dr da di drm dun df dl dc dcl di-help"
+GREEN="\033[1;32m"
+CYAN="\033[1;36m"
+BOLD="\033[1m"
+RESET="\033[0m"
 
-echo "Removing di shortcuts from $BIN_DIR..."
+# FUNCTIONS 
+detect_profile() {
+  if [ -n "$ZSH_VERSION" ]; then
+    echo "$HOME/.zshrc"
+  elif [ -n "$BASH_VERSION" ]; then
+    if shopt -q login_shell 2>/dev/null; then
+      echo "$HOME/.bash_profile"
+    else
+      echo "$HOME/.bashrc"
+    fi
+  else
+    shell_name=$(basename "${SHELL:-$(ps -p $$ -o comm=)}")
+    case "$shell_name" in
+      zsh) echo "$HOME/.zshrc" ;;
+      bash) echo "$HOME/.bashrc" ;;
+      *) echo "$HOME/.profile" ;;
+    esac
+  fi
+}
 
+remove_path_from_profile() {
+  PROFILE_FILE="$1"
+  if [ -f "$PROFILE_FILE" ]; then
+    # Portable sed for macOS + Linux
+    if sed --version >/dev/null 2>&1; then
+      sed -i '/## added by di installer/,+1d' "$PROFILE_FILE"
+    else
+      sed -i '' '/## added by di installer/,+1d' "$PROFILE_FILE"
+    fi
+    echo "✅ Removed PATH modifications from $PROFILE_FILE"
+  fi
+}
+
+# UNINSTALL START 
+echo "${CYAN}🗑 Removing di shortcuts from ${BOLD}$BIN_DIR${RESET}"
 for cmd in $SHORTCUTS; do
-  rm -f "$BIN_DIR/$cmd"
+  if [ -f "$BIN_DIR/$cmd" ]; then
+    rm -f "$BIN_DIR/$cmd"
+    echo "  Removed $cmd"
+  fi
 done
 
-# Detect active shell profile (same logic as install)
-SHELL_NAME=$(basename "$SHELL")
-PROFILE_FILE=""
+PROFILE_FILE=$(detect_profile)
+echo "🔍 Using profile file: $PROFILE_FILE"
+remove_path_from_profile "$PROFILE_FILE"
 
-if [ "$SHELL_NAME" = "zsh" ]; then
-  if [ -n "$ZSH_VERSION" ]; then
-    PROFILE_FILE="$HOME/.zshrc"
-  else
-    PROFILE_FILE="$HOME/.zprofile"
-  fi
-elif [ "$SHELL_NAME" = "bash" ]; then
-  if shopt -q login_shell 2>/dev/null; then
-    PROFILE_FILE="$HOME/.bash_profile"
-  else
-    PROFILE_FILE="$HOME/.bashrc"
-  fi
-else
-  PROFILE_FILE="$HOME/.profile"
-fi
-
-echo "Using profile file: $PROFILE_FILE"
-
-if [ -f "$PROFILE_FILE" ]; then
-  sed -i.bak '/## added by di installer/,+1d' "$PROFILE_FILE"
-  echo "Removed PATH modifications from $PROFILE_FILE"
-fi
-
-echo "Uninstallation complete."
+echo
+echo "${GREEN}✅ Uninstallation complete.${RESET}"
 echo "Restart your terminal to finalize."
