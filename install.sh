@@ -17,23 +17,51 @@ RESET="\033[0m"
 
 # FUNCTIONS
 detect_profile() {
+  # 1) interactive shell vars
   if [ -n "$ZSH_VERSION" ]; then
-    echo "$HOME/.zshrc"
+    echo "$HOME/.zshrc"; return
   elif [ -n "$BASH_VERSION" ]; then
     if shopt -q login_shell 2>/dev/null; then
       echo "$HOME/.bash_profile"
     else
       echo "$HOME/.bashrc"
     fi
-  else
-    # Fallback: try SHELL env or process name
-    shell_name=$(basename "${SHELL:-$(ps -p $$ -o comm=)}")
-    case "$shell_name" in
-      zsh) echo "$HOME/.zshrc" ;;
-      bash) echo "$HOME/.bashrc" ;;
-      *) echo "$HOME/.profile" ;;
+    return
+  fi
+
+  # 2) $SHELL env
+  if [ -n "$SHELL" ]; then
+    case "$(basename "$SHELL")" in
+      zsh)  echo "$HOME/.zshrc"; return ;;
+      bash) echo "$HOME/.bashrc"; return ;;
+      fish) echo "$HOME/.config/fish/config.fish"; return ;;
+      ksh)  echo "$HOME/.kshrc"; return ;;
     esac
   fi
+
+  # 3) parent process walk (works for `curl | sh`)
+  pid=$$
+  max_depth=10
+  i=0
+  while [ "$i" -lt "$max_depth" ]; do
+    parent=$(ps -o ppid= -p "$pid" 2>/dev/null | tr -d ' ')
+    [ -z "$parent" ] && break
+    cmd=$(ps -o comm= -p "$parent" 2>/dev/null | awk '{print $1}' | xargs basename)
+    case "$cmd" in
+      -*) cmd=$(echo "$cmd" | sed 's/^-//') ;;
+    esac
+    case "$cmd" in
+      zsh)  echo "$HOME/.zshrc"; return ;;
+      bash) echo "$HOME/.bashrc"; return ;;
+      fish) echo "$HOME/.config/fish/config.fish"; return ;;
+      ksh)  echo "$HOME/.kshrc"; return ;;
+    esac
+    pid=$parent
+    i=$((i+1))
+  done
+
+  # 4) fallback
+  echo "$HOME/.profile"
 }
 
 add_path_to_profile() {
@@ -59,7 +87,7 @@ mkdir -p "$BIN_DIR"
 
 # Cleanup old shortcuts
 echo "🧹 Cleaning up old di shortcuts..."
-for file in dr da di drm dun df dl dc dcl di-help; do
+for file in $SHORTCUTS di-help; do
   if [ -f "$BIN_DIR/$file" ]; then
     rm -f "$BIN_DIR/$file"
     echo "  Removed old $file"
@@ -107,7 +135,7 @@ chmod +x "$BIN_DIR/di-help"
 PROFILE_FILE=$(detect_profile)
 echo "🔍 Using profile file: $PROFILE_FILE"
 
-# Ensure profile file exists
+# Ensure profile exists
 [ -f "$PROFILE_FILE" ] || touch "$PROFILE_FILE"
 
 # Add path if needed
